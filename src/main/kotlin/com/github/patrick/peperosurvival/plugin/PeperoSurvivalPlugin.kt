@@ -28,6 +28,7 @@ import org.apache.logging.log4j.core.Logger
 import org.bukkit.Material
 import org.bukkit.craftbukkit.v1_16_R3.CraftChunk
 import org.bukkit.craftbukkit.v1_16_R3.block.data.CraftBlockData
+import org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockFromToEvent
@@ -50,8 +51,8 @@ class PeperoSurvivalPlugin : JavaPlugin() {
         }
 
         val distance = config.getInt("distance").takeIf { it > 1 } ?: 4
+        val inverse = config.getBoolean("inverse")
         val air = (Material.AIR.createBlockData() as CraftBlockData).state
-        val endPortalFrame = (Material.END_PORTAL_FRAME.createBlockData() as CraftBlockData).state.block.toString()
 
         server.pluginManager.registerEvents(object : Listener {
             @EventHandler
@@ -65,7 +66,7 @@ class PeperoSurvivalPlugin : JavaPlugin() {
                             if ((x + chunk.x * 16) % distance != 0 || (z + chunk.z * 16) % distance != 0) {
                                 nmsChunk.sections.filterNotNull().forEach { section ->
                                     for (y in 0 until 16) {
-                                        if (section.blocks.a(x, y, z).block.toString() != endPortalFrame) {
+                                        if (CraftMagicNumbers.getMaterial(section.blocks.a(x, y, z).block) == Material.END_PORTAL_FRAME) {
                                             section.blocks.b(x, y, z, air)
                                         }
                                     }
@@ -89,7 +90,7 @@ class PeperoSurvivalPlugin : JavaPlugin() {
             fun onBlockPlace(event: BlockPlaceEvent) {
                 val block = event.block
 
-                if ((block.x % distance != 0 || block.z % distance != 0) && event.blockReplacedState.block.type != Material.END_PORTAL_FRAME) {
+                if ((block.x % distance != 0 || block.z % distance != 0) xor inverse && event.blockReplacedState.block.type != Material.END_PORTAL_FRAME) {
                     event.isCancelled = true
                 }
             }
@@ -98,7 +99,7 @@ class PeperoSurvivalPlugin : JavaPlugin() {
             fun onPlayerBucketEmpty(event: PlayerBucketEmptyEvent) {
                 val block = event.block
 
-                if (block.x % distance != 0 || block.z % distance != 0) {
+                if ((block.x % distance != 0 || block.z % distance != 0) xor inverse) {
                     event.isCancelled = true
                 }
             }

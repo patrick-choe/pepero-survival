@@ -22,12 +22,12 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.10"
+    kotlin("jvm") version "1.4.20"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 group = "com.github.patrick-mc"
-version = "1.0-SNAPSHOT"
+version = "1.0.1-SNAPSHOT"
 
 repositories {
     maven("https://repo.maven.apache.org/maven2/")
@@ -51,14 +51,15 @@ tasks {
     create<Copy>("distJar") {
         from(shadowJar)
 
+        val fileName = "${project.name.split("-").joinToString("") { it.capitalize() }}.jar"
+
+        rename {
+            fileName
+        }
+
         if (System.getProperty("os.name").startsWith("Windows")) {
-            val fileName = "${project.name.split("-").joinToString("") { it.capitalize() }}.jar"
             val pluginsDir = "W:\\Servers\\1.16.4\\plugins"
             val updateDir = "$pluginsDir\\update"
-
-            rename {
-                fileName
-            }
 
             if (file("$pluginsDir\\$fileName").exists()) {
                 into(updateDir)
